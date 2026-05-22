@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.env
+.git/
+fig*.png
+*.docx
+_make_report.py
