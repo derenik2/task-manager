@@ -1,12 +1,48 @@
-import os
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = Path(__file__).parent
+
+
+class Settings(BaseSettings):
+    """Все настройки приложения.
+
+    Приоритет (от высшего к низшему):
+      1. Переменные окружения (os.environ)
+      2. Файл .env в корне проекта
+      3. Значения по умолчанию ниже
+
+    Аналог spf13/viper для Python.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    # ── Сервер ────────────────────────────────────────────────
+    port: int = 5000
+    flask_env: str = "development"
+    debug: bool = False
+    log_level: str = "INFO"
+
+    # ── Безопасность ──────────────────────────────────────────
+    secret_key: str = "dev-secret-change-in-production"
+
+    # ── База данных ───────────────────────────────────────────
+    database_url: str = f"sqlite:///{BASE_DIR / 'app.db'}"
+
+
+# Единственный экземпляр — читается один раз при старте приложения
+settings = Settings()
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
-    DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
-    DEBUG = False
+    SECRET_KEY = settings.secret_key
+    SQLALCHEMY_DATABASE_URI = settings.database_url
+    DEBUG = settings.debug
     TESTING = False
 
 
